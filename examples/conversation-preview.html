@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interface Study — Conversation Preview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #0d1118;
+      --sidebar: #141b25;
+      --panel: #192330;
+      --panel-soft: #202d3c;
+      --line: #2d3b4d;
+      --text: #edf3f9;
+      --muted: #9baabc;
+      --accent: #8db7ff;
+      --warm: #f1bc73;
+      --good: #72d6aa;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(141, 183, 255, 0.1), transparent 32rem),
+        var(--page);
+      color: var(--text);
+    }
+
+    button, textarea { font: inherit; }
+
+    .window {
+      width: min(1120px, 100%);
+      min-height: 680px;
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+      box-shadow: 0 36px 100px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+
+    .sidebar {
+      padding: 24px 18px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), #6f82ff);
+      color: #08101d;
+      font-size: 0.82rem;
+    }
+
+    .nav-label {
+      margin: 0 0 10px 10px;
+      color: #718297;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .channel {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .channel.active { background: var(--panel-soft); color: var(--text); }
+    .channel:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    .conversation { min-width: 0; display: grid; grid-template-rows: auto 1fr auto; }
+
+    .conversation-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .conversation-header h1 { margin: 0 0 4px; font-size: 1.05rem; }
+    .conversation-header p { margin: 0; color: var(--muted); font-size: 0.82rem; }
+
+    .synthetic {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: rgba(114, 214, 170, 0.12);
+      color: var(--good);
+      padding: 7px 10px;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .messages {
+      padding: 26px 24px;
+      overflow: auto;
+    }
+
+    .message {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: #2d3b4d;
+      color: var(--accent);
+      font-weight: 850;
+    }
+
+    .message-head { display: flex; gap: 9px; align-items: baseline; margin-bottom: 7px; }
+    .message-head strong { font-size: 0.9rem; }
+    .message-head time { color: #718297; font-size: 0.72rem; }
+    .message p { margin: 0; color: #c8d3df; line-height: 1.55; }
+
+    .attachment {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--warm);
+      border-radius: 10px;
+      background: #121a24;
+      padding: 14px;
+    }
+
+    .attachment-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .attachment-top strong { font-size: 0.82rem; }
+    .attachment-top span { color: var(--warm); font-size: 0.72rem; font-weight: 800; }
+    .meter { height: 7px; border-radius: 999px; background: #263446; overflow: hidden; }
+    .meter span { display: block; width: 68%; height: 100%; background: linear-gradient(90deg, var(--warm), #ffe1ac); }
+
+    .composer {
+      padding: 18px 24px 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .composer-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #121a24;
+      padding: 10px;
+    }
+
+    textarea {
+      min-height: 48px;
+      resize: vertical;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 8px;
+    }
+
+    .send {
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #0a1422;
+      padding: 11px 15px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .send:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+    .composer-note { margin: 9px 2px 0; color: #718297; font-size: 0.74rem; }
+
+    @media (max-width: 760px) {
+      body { padding: 0; }
+      .window { min-height: 100vh; border: 0; border-radius: 0; grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .conversation-header, .messages, .composer { padding-left: 18px; padding-right: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="window">
+    <aside class="sidebar" aria-label="Sample sections">
+      <div class="brand"><span class="brand-mark">UI</span><span>Workspace Study</span></div>
+      <p class="nav-label">Sections</p>
+      <button class="channel active" type="button"><span>#</span><span>layout-review</span></button>
+      <button class="channel" type="button"><span>#</span><span>research-notes</span></button>
+      <button class="channel" type="button"><span>#</span><span>weekly-plan</span></button>
+    </aside>
+
+    <section class="conversation" aria-labelledby="conversation-title">
+      <header class="conversation-header">
+        <div>
+          <h1 id="conversation-title"># layout-review</h1>
+          <p>Fictional collaboration thread for layout demonstration.</p>
+        </div>
+        <span class="synthetic">Synthetic data</span>
+      </header>
+
+      <div class="messages" id="messages">
+        <article class="message">
+          <div class="avatar" aria-hidden="true">MK</div>
+          <div>
+            <div class="message-head"><strong>Mika</strong><time datetime="2026-01-01T09:18:00">9:18</time></div>
+            <p>I tightened the card spacing and increased the contrast on secondary labels. The mobile layout now keeps the primary action visible.</p>
+            <div class="attachment">
+              <div class="attachment-top"><strong>Interface review</strong><span>68% complete</span></div>
+              <div class="meter" aria-label="Interface review 68 percent complete"><span></span></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="message">
+          <div class="avatar" aria-hidden="true">JL</div>
+          <div>
+            <div class="message-head"><strong>Jules</strong><time datetime="2026-01-01T09:24:00">9:24</time></div>
+            <p>The focus order feels much better. I also checked the narrow layout and the long message wrapping.</p>
+          </div>
+        </article>
+
+        <article class="message">
+          <div class="avatar" aria-hidden="true">RS</div>
+          <div>
+            <div class="message-head"><strong>Rin</strong><time datetime="2026-01-01T09:31:00">9:31</time></div>
+            <p>Looks ready for another visual pass. I left two fictional notes in the sidebar so the navigation has realistic density.</p>
+          </div>
+        </article>
+      </div>
+
+      <form class="composer" id="composer">
+        <div class="composer-box">
+          <textarea id="draft" aria-label="Sample message" placeholder="Write a local sample message..."></textarea>
+          <button class="send" type="submit">Add</button>
+        </div>
+        <p class="composer-note">Messages remain in this browser tab and are not transmitted.</p>
+        <p class="composer-note">This example demonstrates frontend engineering techniques using synthetic data. It is not connected to production systems or services.</p>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const composer = document.querySelector('#composer');
+    const draft = document.querySelector('#draft');
+    const messages = document.querySelector('#messages');
+
+    composer.addEventListener('submit', event => {
+      event.preventDefault();
+      const text = draft.value.trim();
+      if (!text) return;
+
+      const article = document.createElement('article');
+      article.className = 'message';
+      article.innerHTML = `
+        <div class="avatar" aria-hidden="true">YOU</div>
+        <div>
+          <div class="message-head"><strong>Local preview</strong><time>now</time></div>
+          <p></p>
+        </div>`;
+      article.querySelector('p').textContent = text;
+      messages.append(article);
+      draft.value = '';
+      article.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  </script>
+</body>
+</html>
