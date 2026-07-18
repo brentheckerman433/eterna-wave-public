@@ -1,88 +1,152 @@
 # Eterna
 
+This is the public reference repository for Eterna. The production stack is private: the architecture is patent-pending across 11 families (filed, not granted) and the running system holds live mainnet configuration. This repo contains the public interface surface and documentation. The system itself is evaluated live at https://governance-coach.com/doors — no credentials, no build required.
+
 **The independent control layer for AI-initiated payments on XRPL.**
 
-The payment settles, but the door stays locked until Eterna independently verifies it on XRPL.
+## 1. What this is
 
-**Settled ≠ unlocked.** The ledger proves a payment moved. It does not prove anyone allowed it. Eterna is the layer that proves it was allowed — independently, and non-custodially.
+Eterna separates payment settlement from authorization. A transaction can settle on the ledger while the protected resource remains locked; release occurs only after Eterna independently reads the ledger and verifies that the settled transaction matches the terms authorized before signing.
 
----
+Eterna is non-custodial by construction: it holds no keys, never signs, and is never in the flow of funds. The human signs each live payment in their own wallet.
 
-## The problem
+Live today on XRPL mainnet:
 
-x402 gave machines a way to pay. It did not give anyone a way to say *no*. When an AI agent spends, the transaction settles on the ledger — final and correct — and settlement is treated as permission. No one independently verifies that the money that moved was the payment the agent declared, the human approved, and the policy cleared.
+- a human-signed governed payment;
+- refusal of an out-of-policy request before signing;
+- independent post-settlement verification before release.
 
-At machine volume, human review disappears, and settlement silently becomes authorization by default.
+Longer-term bounded authority is designed, not live. The core architecture is patent-pending; applications are **filed, not granted**.
 
-## What Eterna does
+This public repository contains high-level architecture documentation and four generic, synthetic frontend examples. It intentionally omits the verification internals, policy-evaluation implementation, production backend, signing flow, credentials, and deployment configuration.
 
-Eterna sits between an agent's request and the release of value. It independently reads the settled transaction back from XRPL and verifies it, field-by-field, against the terms declared before signing. Only if that check passes does the protected resource unlock.
+- [`ARCHITECTURE_OVERVIEW.md`](./ARCHITECTURE_OVERVIEW.md) — public architecture boundaries
+- [`SECURITY_MODEL.md`](./SECURITY_MODEL.md) — high-level security properties
+- [`ROADMAP.md`](./ROADMAP.md) — designed, not-yet-live direction
+- [`examples/`](./examples) — standalone synthetic interface examples
 
-- The agent proposes.
-- The human's own wallet signs.
-- XRPL settles.
-- **Eterna independently verifies before anything unlocks.**
+## 2. Setup
 
-Eterna never holds keys, never signs, and is never in the flow of funds. The referee is not a player.
+### Prerequisites
 
-## Live today, on XRPL mainnet
+- Git, if cloning the repository
+- Node.js 20 or newer, required only for the repository's test command
+- A modern web browser for the standalone HTML examples
 
-- Governed payment — a real settled transaction on mainnet.
-- Refusal path — an over-policy request is refused before anything is signed; no transaction is created.
-- Independent post-settlement verification — the resource unlocks only on Eterna's own verified ledger read.
-- Human signs every payment.
+### Clone
 
-Every governed payment carries **SourceTag `2606150008`** on XRPL mainnet — publicly inspectable on [Bithomp](https://bithomp.com). You don't have to trust this repo; you can verify it on the public ledger yourself. See [DEMO.md](./DEMO.md).
+```bash
+git clone https://github.com/brentheckerman433/eterna-wave-public.git
+cd eterna-wave-public
+```
 
-## What's in this repository
+### Environment-variable names
 
-This repository contains the architecture documentation and generic, synthetic frontend examples that demonstrate engineering craft. It intentionally does **not** contain the verification internals — those are the core of the system.
+The repository declares these names in `.env.example`:
 
-- [`ARCHITECTURE_OVERVIEW.md`](./ARCHITECTURE_OVERVIEW.md) — how the layers fit together
-- [`SECURITY_MODEL.md`](./SECURITY_MODEL.md) — the design properties, at a high level
-- [`DEMO.md`](./DEMO.md) — watch it, then verify it yourself on Bithomp
-- [`ROADMAP.md`](./ROADMAP.md) — where the architecture goes next
-- [`/examples`](./examples) — four synthetic frontend examples: `control-panel.html`, `conversation-preview.html`, `workspace-dashboard.html`, and `x402-challenge-inspector.html`
+- `PUBLIC_LEDGER_URL`
+- `PUBLIC_LEDGER_NETWORK`
+- `SOURCE_TAG`
 
-## Examples
+The static examples do not load `.env.example`, so no environment file is required to open them or run the current test command. Do not place real credentials or signing material in this public repository.
 
-All examples use synthetic data and connect to no backend.
+### Public repository use
 
-| File | What it demonstrates |
-|---|---|
-| [`control-panel.html`](./examples/control-panel.html) | Responsive dashboard layout and interaction |
-| [`conversation-preview.html`](./examples/conversation-preview.html) | Conversational UI, states, and typography |
-| [`workspace-dashboard.html`](./examples/workspace-dashboard.html) | Filtering, accessibility, and component organization |
-| [`x402-challenge-inspector.html`](./examples/x402-challenge-inspector.html) | Client-side parsing and display of a public x402 challenge |
+The production stack is not built from this repository. The production backend, build and start configuration, container configuration, and deployment configuration are intentionally not published here.
 
-## Quick Start
+Evaluation is through the [live system](https://governance-coach.com/doors) and the [recorded run](https://youtu.be/4-34TXKdfVM). No credentials or local production build are required.
 
-### Open an example
+The files that are runnable from this repository are the standalone HTML examples. Open any `.html` file in [`examples/`](./examples) directly in a browser; they make no backend connection and require no build step.
 
-Open any `.html` file in [`examples/`](./examples) directly in a browser. There is no build step and no backend.
+To confirm that the hosted walkthrough is reachable, run:
 
-### Run tests
+```bash
+curl -s -o /dev/null -w "%{http_code} %{content_type}\n" https://governance-coach.com/doors
+```
 
-Requires Node.js 20 or newer.
+A healthy response is `200 text/html; charset=utf-8`.
+
+## 3. How to test
+
+Start with the live walkthrough at **https://governance-coach.com/doors**. No credentials are required, and judges are not expected to rebuild the production stack.
+
+1. Open the walkthrough in a browser.
+2. Follow the on-screen governed-payment sequence.
+3. Confirm that an out-of-policy request is refused before signing.
+4. Confirm that settlement and release are presented as separate states.
+5. Use the displayed public-ledger reference to inspect the settled transaction independently.
+
+The four files under [`examples/`](./examples) can also be opened directly to review responsive layout, accessibility, state presentation, filtering, and client-side parsing with synthetic data.
+
+The repository's only automated command is:
 
 ```bash
 npm test
 ```
 
-## Demo
+This runs Node's native test runner and currently discovers no test files. A successful run confirms that the published manifest and Node requirement are compatible; it is not a substitute for the live walkthrough.
 
-▶ **Live governed payment on XRPL:** https://youtu.be/4-34TXKdfVM
+## 4. How Codex was used
 
-## Status
+Codex accelerated development through a repeatable, reviewable cycle:
 
-- Live on XRPL mainnet: governed payment, refusal path, independent verification.
-- XRPL Make Waves submission — July 2026.
-- Core architecture is **patent-pending** — applications filed, not granted.
+1. A human-authored specification defined one bounded change and its acceptance checks.
+2. Codex wrote only the scoped code, tests, or documentation.
+3. The affected production service was rebuilt without cache:
+
+   ```bash
+   docker compose build --no-cache eterna-backend
+   docker compose up -d eterna-backend
+   ```
+
+4. The result was verified from outside the container through the public HTTP surface, browser behavior, and independent ledger evidence rather than an in-process success claim.
+5. A security reviewer checked the change and the publication boundary by role, without becoming part of the runtime trust model.
+6. The reviewed change closed as a single commit.
+
+Concrete checkpoints from the actual Git history include:
+
+- `7ec811e` — added the independently ledger-validated release path;
+- `240c3ee` — added pre-signing, fail-closed refusal with persisted evidence;
+- `1715c47` — exposed the seven-door walkthrough at `/doors`;
+- `79b822f` — recorded the browser verification pass for the hosted flow;
+- `faa6742` — created this public repository boundary in one commit with the architecture documents and four synthetic examples.
+
+The public repository intentionally preserves only the final reviewed publication commit, not the private implementation iterations.
+
+## 5. How GPT-5.6 is used
+
+> **Placeholder:** The project owner will supply this section before submission.
+
+## 6. Key engineering decisions
+
+### Evaluate before, not after
+
+Requests are evaluated against their declared authority before anything is signed. Post-settlement review cannot undo an unauthorized payment.
+
+### Independent ledger read, not a facilitator report
+
+Release depends on Eterna's own read of the public ledger. A facilitator's success response is not treated as proof of settlement or authorization.
+
+### Fail-closed anomaly hold
+
+Missing, conflicting, delayed, or unverifiable evidence keeps the resource locked. Ambiguity never becomes permission.
+
+### Evidence-first state
+
+State transitions are backed by durable evidence so an outcome can be reconstructed and independently checked rather than inferred from UI state.
+
+### Non-custodial by construction
+
+Eterna holds no keys, never signs, and never enters the flow of funds. The verifier is structurally separate from the transaction it verifies.
+
+### Rail-agnostic
+
+The control model separates authorization, settlement, verification, and release so the same security properties can apply across payment rails without making a rail or settlement provider the authority.
 
 ## License
 
-Licensed under the MIT License — a permissive open-source license. See LICENSE.
+Licensed under the MIT License. See [`LICENSE`](./LICENSE).
 
 ---
 
-*Eterna.AI LLC (Delaware) · non-custodial by design, from the first commit.*
+*Eterna.AI LLC (Delaware) · non-custodial by design.*
