@@ -127,7 +127,7 @@ Requests are evaluated against their declared authority before anything is signe
 
 Release depends on Eterna's own read of the public ledger. A facilitator's success response is not treated as proof of settlement or authorization.
 
-### Fail-closed anomaly hold
+### Fail-closed by default
 
 Missing, conflicting, delayed, or unverifiable evidence keeps the resource locked. Ambiguity never becomes permission.
 
